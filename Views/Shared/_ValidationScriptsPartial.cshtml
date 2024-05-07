@@ -1,0 +1,97 @@
+﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+public async Task<IActionResult>
+    Index(string movieGenre, string searchString, string sortOrder, int? pageNumber)
+    {
+    IQueryable<string>
+        genreQuery = from m in _context.Movie
+        orderby m.Genre
+        select m.Genre;
+        var movies = from m in _context.Movie
+        where m.Title != null // Check for null value
+        select m;
+        if (pageNumber == null)
+        {
+        // Handle the case when pageNumber is null (e.g., set it to 1)
+        pageNumber = 1;
+        }
+        if (!string.IsNullOrEmpty(searchString))
+        {
+        movies = movies.Where(s => s.Title.Contains(searchString));
+        }
+
+        if (!string.IsNullOrEmpty(movieGenre))
+        {
+        movies = movies.Where(x => x.Genre == movieGenre);
+        }
+
+        ViewBag.TitleSortParam = sortOrder == "Title" ? "title_desc" : "Title";
+        ViewBag.DateSortParam = sortOrder == "ReleaseDate" ? "releaseDate_desc" : "ReleaseDate";
+        ViewBag.GenreSortParam = sortOrder == "Genre" ? "genre_desc" : "Genre";
+        ViewBag.PriceSortParam = sortOrder == "Price" ? "price_desc" : "Price";
+        ViewBag.RatingSortParam = sortOrder == "Rating" ? "rating_desc" : "Rating";
+
+        // Sorting
+        switch (sortOrder)
+        {
+        case "Title":
+        movies = movies.OrderBy(m => m.Title);
+        break;
+        case "title_desc":
+        movies = movies.OrderByDescending(m => m.Title);
+        break;
+        case "ReleaseDate":
+        movies = movies.OrderBy(m => m.ReleaseDate);
+        break;
+        case "releaseDate_desc":
+        movies = movies.OrderByDescending(m => m.ReleaseDate);
+        break;
+        case "Genre":
+        movies = movies.OrderBy(m => m.Genre);
+        break;
+        case "Genre_Desc":
+        movies = movies.OrderByDescending(m => m.Genre);
+        break;
+        case "Price":
+        movies = movies.OrderBy(m => m.Price);
+        break;
+        case "Price_Desc":
+        movies = movies.OrderByDescending(m => m.Price);
+        break;
+        case "Rating":
+        movies = movies.OrderBy(m => m.Rating);
+        break;
+        case "Rating_Desc":
+        movies = movies.OrderByDescending(m => m.Rating);
+        break;
+        }
+
+        int pageSize = 10;
+        var count = await movies.CountAsync();
+
+        // Check if movies collection is null
+        if (movies != null)
+        {
+        var paginatedMovies = await movies.Skip(((pageNumber ?? 1) - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+        var movieGenreVM = new MovieGenreViewModel
+        {
+        Genres = new SelectList(await _context.Movie.Select(m => m.Genre).Distinct().ToListAsync()),
+        Movies = new PaginatedList<Movie>
+            (paginatedMovies, count, pageNumber ?? 1, pageSize),
+            MovieGenre = movieGenre ?? "", // Check if movieGenre is null and provide a default value
+            SearchString = searchString ?? "", // Check if searchString is null and provide a default value
+            CurrentSort = sortOrder ?? "" // Check if sortOrder is null and provide a default value
+            };
+
+            return View(movieGenreVM);
+            }
+            else
+            {
+
+            return NotFound("Movies collection is null.");
+            }
+            }
