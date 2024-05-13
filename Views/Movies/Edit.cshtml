@@ -1,56 +1,26 @@
-﻿@model MvcMovie.Models.Movie
-
-@{
-    ViewData["Title"] = "Edit";
-}
-
-<h1>Edit</h1>
-
-<h4>Movie</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form id="editForm">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
+﻿<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Movie</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="form-group">
-                <label asp-for="ReleaseDate" class="control-label"></label>
-                <input asp-for="ReleaseDate" class="form-control" type="date" />
-                <span asp-validation-for="ReleaseDate" class="text-danger"></span>
+            <div class="modal-body" id="editModalBody">
+                @await Html.PartialAsync("movieFields", Model, new ViewDataDictionary(ViewData) { { "EditMode", true } })
             </div>
-            <div class="form-group">
-                <label asp-for="Genre" class="control-label"></label>
-                <input asp-for="Genre" class="form-control" />
-                <span asp-validation-for="Genre" class="text-danger"></span>
+            <div class="modal-footer">
+                <button type="button" id="saveButton" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
-            <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Rating" class="control-label"></label>
-                <input asp-for="Rating" class="form-control" />
-                <span asp-validation-for="Rating" class="text-danger"></span>
-            </div>           
-            <div class="form-group">
-                <button type="button" id="saveButton" class="btn btn-primary">Save</button> <!-- Change input type to button -->
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 @section Scripts {
     <script>
-        console.log("Script executed!");
+       
         $(document).ready(function () {
             $("#saveButton").click(function (event) {
                 console.log("Form submitted!");
@@ -68,14 +38,13 @@
                     type: "POST",
                     url: "/Movies/Edit/" + movieId,
                     data: formData,
-                   
                     success: function (response) {
                         Swal.fire({
                             title: 'Success!',
                             text: 'Movie updated successfully!',
                             icon: 'success',
                             confirmButtonText: 'OK'
-                        }).then((result) => {
+                        });.then((result) => {
                             if (result.isConfirmed) {
                                 window.location.href = '/Movies/Index';
                             }

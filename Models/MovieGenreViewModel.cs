@@ -12,6 +12,7 @@ namespace MvcMovie.ViewModels
         public string? MovieGenre { get; set; }
         public string? SearchString { get; set; }
         public string? CurrentSort { get; set; }
+        public int? PageNumber { get; set; }
     }
 
 }

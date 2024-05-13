@@ -1,0 +1,194 @@
+﻿@model MvcMovie.Models.Subscriber
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1>Create Subscriber</h1>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="form-group d-flex justify-content-between">
+                            <div class="smaller-width mb-3 mr-3">
+                                <label asp-for="Name" class="control-label"></label>
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="text-black mb-1">Subscriber ID:</div>
+                                <div class="bg-light text-black p-2 rounded">
+                                    M@(Model.Id.ToString("D3"))
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="Email" class="control-label"></label>
+                                    <input asp-for="Email" class="form-control" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="Phone" class="control-label"></label>
+                                    <input asp-for="Phone" class="form-control" />
+                                    <span asp-validation-for="Phone" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="PhoneType" class="control-label"></label>
+                                    <input asp-for="PhoneType" class="form-control" />
+                                    <span asp-validation-for="PhoneType" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="Address" class="control-label"></label>
+                <input asp-for="Address" class="form-control" />
+                <span asp-validation-for="Address" class="text-danger"></span>
+                                </div>
+            </div>
+                                <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="City" class="control-label"></label>
+                <input asp-for="City" class="form-control" />
+                <span asp-validation-for="City" class="text-danger"></span>
+                                    </div>
+            </div>
+                                    <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="PostalCode" class="control-label"></label>
+                <input asp-for="PostalCode" class="form-control" />
+                <span asp-validation-for="PostalCode" class="text-danger"></span>
+                                    </div>
+            </div>
+                        </div>
+             <div class=" row">
+                            <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="Country" class="control-label"></label>
+                            <select asp-for="Country" class="form-control">
+                                <option value="India">India</option>
+                                <option value="USA">USA</option>
+                                <option value="Canada">Canada</option>
+                            </select>
+                <span asp-validation-for="Country" class="text-danger"></span>
+            </div>
+                            </div>
+                                <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="State" class="control-label"></label>
+                <input asp-for="State" class="form-control" />
+                <span asp-validation-for="State" class="text-danger"></span>
+            </div>
+                            </div>
+                                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="AddressType" class="control-label"></label>
+                            <select asp-for="AddressType" class="form-control">
+                                <option value="Work">Work</option>
+                                <option value="Home">Home</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <span asp-validation-for="AddressType" class="text-danger"></span>
+                        </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="form-group mb-4">
+                            <strong><label for="MoviesList">Movies List</label></strong>
+                            <div id="MoviesList" class="row">
+                                @if (ViewBag.Movies != null)
+                                {
+                                    @foreach (var movie in ViewBag.Movies as List<Movie>)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="movieCheckbox-@movie.Id" value="@movie.Id" data-price="@movie.Price">
+                                                <label class="form-check-label" for="movieCheckbox-@movie.Id">
+                                                    @movie.Title
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p>No movies available.</p>
+                                }
+                            </div>
+                        </div>
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5>Selected Movies</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Movie Name</th>
+                                            <th>Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="selectedMoviesTableBody">
+                                    </tbody>
+                                </table>
+                                <p>Total Cost: $<span id="totalCost">0</span></p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input type="submit" value="Subscribe" class="btn btn-primary" />
+                            <a asp-action="Index" class="btn btn-secondary">Back to Index</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#MoviesList').change(function () {
+                updateSelectedMoviesTable();
+                calculateTotalCost();
+            });
+        });
+
+        function updateSelectedMoviesTable() {
+            console.log("Updating selected movies table...");
+            $('#selectedMoviesTableBody').empty();
+            // Check if any checkboxes are checked
+            var checkedCheckboxes = $('input[type="checkbox"]:checked');
+            console.log("Number of checked checkboxes:", checkedCheckboxes.length);
+            checkedCheckboxes.each(function () {
+                console.log("Selected checkbox: ", this);
+                var movieName = $(this).next('label').text();
+                var moviePrice = parseFloat($(this).data('price'));
+                $('#selectedMoviesTableBody').append('<tr><td>' + movieName + '</td><td>$' + moviePrice.toFixed(2) + '</td></tr>');
+            });
+        }
+
+        function calculateTotalCost() {
+            var totalCost = 0;
+            $('#MoviesList input[type="checkbox"]:checked').each(function () {
+                totalCost += parseFloat($(this).data('price'));
+            });
+            $('#totalCost').text(totalCost.toFixed(2));
+        }
+
+        updateSelectedMoviesTable();
+        calculateTotalCost();
+    </script>
+}

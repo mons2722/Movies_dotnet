@@ -10,12 +10,14 @@ using MvcMovie.Data;
 using MvcMovie.Models;
 using MvcMovie.Utilities;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http; //added for using sessions 
 
 namespace MvcMovie.Controllers
 {
     public class MoviesController : Controller
     {
         private readonly MvcMovieContext _context;
+        private string ResetFilters;
 
         public MoviesController(MvcMovieContext context)
         {
@@ -24,6 +26,41 @@ namespace MvcMovie.Controllers
 
         public async Task<IActionResult> Index(string movieGenre, string searchString, string sortOrder, int? pageNumber)
         {
+            if (!string.IsNullOrEmpty(ResetFilters))
+            {
+                // Clear session variables
+                HttpContext.Session.Remove("MovieGenre");
+                HttpContext.Session.Remove("SearchString");
+
+                return RedirectToAction("Index");
+            }
+
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("MovieGenre")))
+            {
+              HttpContext.Session.SetString("MovieGenre", "");
+                HttpContext.Session.SetString("SearchString", "");
+            }
+
+            string sessionMovieGenre = HttpContext.Session.GetString("MovieGenre");
+            string sessionSearchString = HttpContext.Session.GetString("SearchString");
+
+            if (!string.IsNullOrEmpty(movieGenre))
+            {
+                HttpContext.Session.SetString("MovieGenre", movieGenre);
+            }
+            else
+            {
+                movieGenre = sessionMovieGenre;
+            }
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                HttpContext.Session.SetString("SearchString", searchString);
+            }
+            else
+            {
+                searchString = sessionSearchString;
+            }
 
             IQueryable<string> genreQuery = from m in _context.Movie
                                             orderby m.Genre
@@ -114,8 +151,9 @@ namespace MvcMovie.Controllers
             {
                 return NotFound();
             }
-
-            return View(movie);
+            ViewData["EditMode"] = false;
+            ViewData["DetailsMode"] = true;
+            return PartialView("movieFields", movie);
         }
 
         // GET: Movies/Create
@@ -167,9 +205,10 @@ namespace MvcMovie.Controllers
             {
                 return NotFound();
             }
+            ViewData["EditMode"] = true;
+            ViewData["DetailsMode"] = false;
 
-            return View(movie);
-
+            return PartialView("movieFields", movie);
         }
 
         // POST: Movies/Edit/5
@@ -178,7 +217,7 @@ namespace MvcMovie.Controllers
         [HttpPost]
            public async Task<IActionResult> Edit(int id, MovieEditViewModel viewModel)
            {
-            Debug.WriteLine("Received Edit request for movie with ID: " + id);
+           
             if (id != viewModel.Id)
             {
                 return NotFound();
@@ -240,7 +279,7 @@ namespace MvcMovie.Controllers
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            Console.WriteLine("Hello World");
+         
             if (_context.Movie == null)
             {
                 return Problem("Entity set 'MvcMovieContext.Movie'  is null.");
