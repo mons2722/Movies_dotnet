@@ -17,75 +17,79 @@ namespace MvcMovie.Controllers
     public class MoviesController : Controller
     {
         private readonly MvcMovieContext _context;
-        private string ResetFilters;
 
         public MoviesController(MvcMovieContext context)
         {
             _context = context;
         }
 
-        public async Task<IActionResult> Index(string movieGenre, string searchString, string sortOrder, int? pageNumber)
+        public async Task<IActionResult> Index(MovieGenreViewModel model)
         {
-            if (!string.IsNullOrEmpty(ResetFilters))
+            if (!string.IsNullOrEmpty(model.ResetFilters))
             {
-                // Clear session variables
                 HttpContext.Session.Remove("MovieGenre");
                 HttpContext.Session.Remove("SearchString");
-
                 return RedirectToAction("Index");
-            }
-
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("MovieGenre")))
-            {
-              HttpContext.Session.SetString("MovieGenre", "");
-                HttpContext.Session.SetString("SearchString", "");
             }
 
             string sessionMovieGenre = HttpContext.Session.GetString("MovieGenre");
             string sessionSearchString = HttpContext.Session.GetString("SearchString");
 
-            if (!string.IsNullOrEmpty(movieGenre))
+            if (model.MovieGenre == "All") 
             {
-                HttpContext.Session.SetString("MovieGenre", movieGenre);
+                if (!string.IsNullOrEmpty(model.SearchString))
+                {
+                    HttpContext.Session.SetString("MovieGenre", "");
+                    model.MovieGenre = "";
+                    HttpContext.Session.SetString("SearchString", model.SearchString);
+                }
+                else
+                {
+                    HttpContext.Session.Remove("MovieGenre");
+                    HttpContext.Session.Remove("SearchString");
+                    return RedirectToAction("Index");
+                }
             }
-            else
+            else if (string.IsNullOrEmpty(model.MovieGenre)&& string.IsNullOrEmpty(model.SearchString))
             {
-                movieGenre = sessionMovieGenre;
+               
+                    model.MovieGenre = sessionMovieGenre ?? "";
+                    model.SearchString = sessionSearchString ?? "";
+            }
+            else // MovieGenre is provided in the URL
+            {
+                HttpContext.Session.SetString("MovieGenre", model.MovieGenre??"");
+                HttpContext.Session.SetString("SearchString", model.SearchString ?? "");
             }
 
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                HttpContext.Session.SetString("SearchString", searchString);
-            }
-            else
-            {
-                searchString = sessionSearchString;
-            }
 
             IQueryable<string> genreQuery = from m in _context.Movie
                                             orderby m.Genre
                                             select m.Genre;
+
             var movies = from m in _context.Movie
                          select m;
 
-            if (!string.IsNullOrEmpty(searchString))
+
+            if (!string.IsNullOrEmpty(model.SearchString))
             {
-                movies = movies.Where(s => s.Title.Contains(searchString));
+                movies = movies.Where(s => s.Title.Contains(model.SearchString));
             }
 
-            if (!string.IsNullOrEmpty(movieGenre))
+            if (!string.IsNullOrEmpty(model.MovieGenre))
             {
-                movies = movies.Where(x => x.Genre == movieGenre);
+                
+                movies = movies.Where(x => x.Genre == model.MovieGenre);
             }
 
-            ViewBag.TitleSortParam = sortOrder == "Title" ? "title_desc" : "Title";
-            ViewBag.DateSortParam = sortOrder == "ReleaseDate" ? "releaseDate_desc" : "ReleaseDate";
-            ViewBag.GenreSortParam = sortOrder == "Genre" ? "genre_desc" : "Genre";
-            ViewBag.PriceSortParam = sortOrder == "Price" ? "price_desc" : "Price";
-            ViewBag.RatingSortParam = sortOrder == "Rating" ? "rating_desc" : "Rating";
+            ViewBag.TitleSortParam = model.CurrentSort == "Title" ? "title_desc" : "Title";
+            ViewBag.DateSortParam = model.CurrentSort == "ReleaseDate" ? "releaseDate_desc" : "ReleaseDate";
+            ViewBag.GenreSortParam = model.CurrentSort == "Genre" ? "genre_desc" : "Genre";
+            ViewBag.PriceSortParam = model.CurrentSort == "Price" ? "price_desc" : "Price";
+            ViewBag.RatingSortParam = model.CurrentSort == "Rating" ? "rating_desc" : "Rating";
 
             // Sorting
-            switch (sortOrder)
+            switch (model.CurrentSort)
             {
                 case "Title":
                     movies = movies.OrderBy(m => m.Title);
@@ -121,17 +125,18 @@ namespace MvcMovie.Controllers
 
             int pageSize = 5;
             var count = await movies.CountAsync();
-            var paginatedMovies = await movies.Skip(((pageNumber ?? 1) - 1) * pageSize)
+            var paginatedMovies = await movies.Skip(((model.PageNumber ?? 1) - 1) * pageSize)
                                              .Take(pageSize)
                                              .ToListAsync();
 
             var movieGenreVM = new MovieGenreViewModel
             {
                 Genres = new SelectList(await _context.Movie.Select(m => m.Genre).Distinct().ToListAsync()),
-                Movies = new PaginatedList<Movie>(paginatedMovies, count, pageNumber ?? 1, pageSize),
-                MovieGenre = movieGenre,
-                SearchString = searchString,
-                CurrentSort = sortOrder
+                Movies = new PaginatedList<Movie>(paginatedMovies, count, model.PageNumber ?? 1, pageSize),
+                MovieGenre = model.MovieGenre,
+                SearchString = model.SearchString,
+                CurrentSort = model.CurrentSort,
+                ResetFilters= model.ResetFilters
             };
 
             return View(movieGenreVM);
@@ -293,6 +298,45 @@ namespace MvcMovie.Controllers
             await _context.SaveChangesAsync();
             
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdatePrice(List<int> movieIds, decimal newPrice)
+        {
+            if (movieIds == null || movieIds.Count == 0)
+            {
+                return BadRequest("No movies selected!");
+            }
+
+            var moviesToUpdate = await _context.Movie.Where(m => movieIds.Contains(m.Id)).ToListAsync();
+
+            foreach (var movie in moviesToUpdate)
+            {
+                movie.Price = newPrice;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetFilteredMovieIds(string movieGenre, string searchString)
+        {
+            var filteredMovies = _context.Movie.AsQueryable();
+
+            if (!string.IsNullOrEmpty(movieGenre) && movieGenre != "All")
+            {
+                filteredMovies = filteredMovies.Where(m => m.Genre == movieGenre);
+            }
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                filteredMovies = filteredMovies.Where(m => m.Title.Contains(searchString));
+            }
+
+            var movieList = await filteredMovies.Select(m => new { id = m.Id, title = m.Title }).ToListAsync();
+            return Json(movieList);
         }
 
         private bool MovieExists(string title)

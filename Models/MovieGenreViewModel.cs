@@ -13,6 +13,8 @@ namespace MvcMovie.ViewModels
         public string? SearchString { get; set; }
         public string? CurrentSort { get; set; }
         public int? PageNumber { get; set; }
+        public string ResetFilters { get; set; }
+
     }
 
 }

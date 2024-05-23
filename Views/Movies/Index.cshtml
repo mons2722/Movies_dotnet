@@ -10,14 +10,15 @@
 </p>
 <form asp-controller="Movies" asp-action="Index" method="get">
     <p>
-
-        <select asp-for="MovieGenre" asp-items="Model.Genres">
-            <option value="">All</option>
+        <select id="movieGenre" asp-for="MovieGenre" asp-items="Model.Genres">
+            <option value="All">All</option>
         </select>
 
-        Title: <input type="text" asp-for="SearchString" />
+        Title: <input type="text" id="searchString" asp-for="SearchString" />
         <input type="submit" value="Filter" />
-        <a asp-action="Index" asp-route-resetFilters="true">Reset Filter</a>
+        <button type="button" id="resetFiltersBtn" class="btn btn-secondary">Reset Filter</button>
+        <button type="button" id="updatePriceBtn" class="btn btn-primary">Update Price</button>
+
     </p>
 </form>
 
@@ -25,20 +26,24 @@
     <thead>
         <tr>
             <th>
-                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@ViewBag.TitleSortParam">Title</a>
+                <input type="checkbox" id="selectAllCheckbox">
             </th>
             <th>
-                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@ViewBag.DateSortParam">Release Date</a>
+                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-currentSort="@ViewBag.TitleSortParam">Title</a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@ViewBag.GenreSortParam">Genre</a>
+                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-currentSort="@ViewBag.DateSortParam">Release Date</a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@ViewBag.PriceSortParam">Price</a>
+                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-currentSort="@ViewBag.GenreSortParam">Genre</a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@ViewBag.RatingSortParam">Rating</a>
+                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-currentSort="@ViewBag.PriceSortParam">Price</a>
             </th>
+            <th>
+                <a asp-action="Index" asp-route-movieGenre="@Model.MovieGenre" asp-route-searchString="@Model.SearchString" asp-route-currentSort="@ViewBag.RatingSortParam">Rating</a>
+            </th>
+
         </tr>
     </thead>
 
@@ -46,6 +51,7 @@
         @foreach (var item in Model.Movies)
         {
              <tr>
+                <td><input type="checkbox" class="movieCheckbox" data-movie-id="@item.Id" /></td>
                 <td>@Html.DisplayFor(modelItem => item.Title)</td>
                 <td>@Html.DisplayFor(modelItem => item.ReleaseDate)</td>
                 <td>@Html.DisplayFor(modelItem => item.Genre)</td>
@@ -58,41 +64,41 @@
                         <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
                 </td>
-            </tr>
+            </tr> 
         }
     </tbody>
 </table>
 @{
     if (Model.Movies.Count > 0)
     {
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                @if (Model.Movies.HasPreviousPage)
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    @if (Model.Movies.HasPreviousPage)
                 {
-                    <li class="page-item">
-                        <a class="page-link" asp-controller="Movies" asp-action="Index" asp-route-movieGenre="@Model.MovieGenre"
-                           asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@Model.CurrentSort"
-                           asp-route-pageNumber="@(Model.Movies.PageIndex - 1)">Previous</a>
-                    </li>
+                        <li class="page-item">
+                            <a class="page-link" asp-controller="Movies" asp-action="Index" asp-route-movieGenre="@Model.MovieGenre"
+                               asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@Model.CurrentSort"
+                               asp-route-pageNumber="@(Model.Movies.PageIndex - 1)">Previous</a>
+                        </li>
                 }
-                @for (int i = 1; i <= Model.Movies.TotalPages; i++)
+                    @for (int i = 1; i <= Model.Movies.TotalPages; i++)
                 {
-                    <li class="page-item @(i == Model.Movies.PageIndex ? "active" : "")">
-                        <a class="page-link" asp-controller="Movies" asp-action="Index" asp-route-movieGenre="@Model.MovieGenre"
-                           asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@Model.CurrentSort"
-                           asp-route-pageNumber="@i">@i</a>
-                    </li>
+                        <li class="page-item @(i == Model.Movies.PageIndex ? "active" : "")">
+                            <a class="page-link" asp-controller="Movies" asp-action="Index" asp-route-movieGenre="@Model.MovieGenre"
+                               asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@Model.CurrentSort"
+                               asp-route-pageNumber="@i">@i</a>
+                        </li>
                 }
-                @if (Model.Movies.HasNextPage)
+                    @if (Model.Movies.HasNextPage)
                 {
-                    <li class="page-item">
-                        <a class="page-link" asp-controller="Movies" asp-action="Index" asp-route-movieGenre="@Model.MovieGenre"
-                           asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@Model.CurrentSort"
-                           asp-route-pageNumber="@(Model.Movies.PageIndex + 1)">Next</a>
-                    </li>
+                        <li class="page-item">
+                            <a class="page-link" asp-controller="Movies" asp-action="Index" asp-route-movieGenre="@Model.MovieGenre"
+                               asp-route-searchString="@Model.SearchString" asp-route-sortOrder="@Model.CurrentSort"
+                               asp-route-pageNumber="@(Model.Movies.PageIndex + 1)">Next</a>
+                        </li>
                 }
-            </ul>
-        </nav>
+                </ul>
+            </nav>
     }
 }
 <div>
@@ -130,9 +136,35 @@
         </div>
     </div>
  </div>
+
+<!--Update Price Modal-->
+<div class="modal fade" id="updatePriceModal" tabindex="-1" aria-labelledby="updatePriceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updatePriceModalLabel">Update Price</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="selectedMoviesList"></div>
+                <input type="number" id="newPrice" placeholder="New Price" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="updatePriceSubmit">Update Price</button>
+            </div>
+        </div>
+    </div>
+</div>
 @section scripts {
     <script>
         $(document).ready(function () {
+
+                document.getElementById('resetFiltersBtn').addEventListener('click', function () {
+                window.location.href = '/Movies/Index?resetFilters=true';
+            });
+
             $('.editButton').click(function (event) {
                 event.preventDefault();
                 var editUrl = $(this).data('url');
@@ -182,6 +214,161 @@
                 $('#detailsModal .modal-body').load(detailsUrl, function () {
                     $('#detailsModal').modal('show');
                 });
+            });
+
+            let isSelectAll = JSON.parse(localStorage.getItem('isSelectAll')) || false;
+
+            function updateSelectedMovies(movieId, movieTitle, isSelected) {
+                let selectedMovies = JSON.parse(localStorage.getItem('selectedMovies')) || [];
+                if (isSelected) {
+                    if (!selectedMovies.some(movie => movie.id === movieId)) {
+                        selectedMovies.push({ id: movieId, title: movieTitle });
+                    }
+                } else {
+                    selectedMovies = selectedMovies.filter(movie => movie.id !== movieId);
+                }
+                localStorage.setItem('selectedMovies', JSON.stringify(selectedMovies));
+                updateSelectedMoviesDisplay();
+            }
+
+            function refreshCheckboxStates() {
+                let selectedMovies = JSON.parse(localStorage.getItem('selectedMovies')) || [];
+                $('.movieCheckbox').each(function () {
+                    const movieId = $(this).data('movie-id');
+                    $(this).prop('checked', selectedMovies.some(movie => movie.id === movieId));
+                });
+
+                $('#selectAllCheckbox').prop('checked', isSelectAll);
+            }
+
+            refreshCheckboxStates();
+
+            $('.movieCheckbox').change(function () {
+                const movieId = $(this).data('movie-id');
+                const movieTitle = $(this).closest('tr').find('td:eq(1)').text();
+                updateSelectedMovies(movieId, movieTitle, $(this).is(':checked'));
+
+                if (!$(this).is(':checked')) {
+                    $('#selectAllCheckbox').prop('checked', false);
+                    isSelectAll = false;
+                    localStorage.setItem('isSelectAll', JSON.stringify(isSelectAll));
+                }
+            });
+
+            $('#selectAllCheckbox').change(function () {
+                const isSelected = $(this).is(':checked');
+                isSelectAll = isSelected;
+                localStorage.setItem('isSelectAll', JSON.stringify(isSelectAll));
+
+                if (isSelected) {
+                    const movieGenre = $('#movieGenre').val();
+                    const searchString = $('#searchString').val();
+
+                    $.ajax({
+                        type: 'GET',
+                        url: '/Movies/GetFilteredMovieIds',
+                        data: {
+                            movieGenre: movieGenre,
+                            searchString: searchString
+                        },
+                        success: function (response) {
+                            let selectedMovies = JSON.parse(localStorage.getItem('selectedMovies')) || [];
+                            response.forEach(movie => {
+                                if (!selectedMovies.some(m => m.id === movie.id)) {
+                                    selectedMovies.push({ id: movie.id, title: movie.title });
+                                }
+                            });
+                            console.log(selectedMovies);
+                            localStorage.setItem('selectedMovies', JSON.stringify(selectedMovies));
+                            $('.movieCheckbox').each(function () {
+                                $(this).prop('checked', true);
+                            });
+                            updateSelectedMoviesDisplay();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error:', error);
+                        }
+                    });
+                } else {
+                    $('.movieCheckbox').each(function () {
+                        $(this).prop('checked', false);
+                    });
+                    localStorage.setItem('selectedMovies', JSON.stringify([]));
+                    updateSelectedMoviesDisplay();
+                }
+            });
+
+            function updateSelectedMoviesDisplay() {
+                let selectedMovies = JSON.parse(localStorage.getItem('selectedMovies')) || [];
+                const movieGenre = $('#movieGenre').val();
+                const searchString = $('#searchString').val();
+
+                $('#selectedMoviesList').empty();
+
+                if (isSelectAll && (movieGenre === "All" || movieGenre === "" || movieGenre === null) && (searchString === "" || searchString === null)) {
+                    $('#selectedMoviesList').append('<div>ALL Movies</div>');
+                } else {
+                    selectedMovies.forEach(function (movie) {
+                        $('#selectedMoviesList').append('<div>' + movie.title + '</div>');
+                    });
+                }
+            }
+
+            $('#updatePriceBtn').click(function () {
+                let selectedMovies = JSON.parse(localStorage.getItem('selectedMovies')) || [];
+
+                if (selectedMovies.length === 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'No movies selected!',
+                    });
+                    return;
+                }
+
+                updateSelectedMoviesDisplay();
+                $('#updatePriceModal').modal('show');
+            });
+
+            $('#updatePriceSubmit').click(function () {
+                var newPrice = $('#newPrice').val();
+                let selectedMovies = JSON.parse(localStorage.getItem('selectedMovies')) || [];
+
+                if (newPrice === '' || newPrice <= 0 || newPrice > 100) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Price',
+                        text: 'Please enter a valid price between 1 and 100.',
+                    });
+                    return;
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/Movies/UpdatePrice',
+                    data: { movieIds: selectedMovies.map(movie => movie.id), newPrice: newPrice },
+                    success: function (response) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Price updated successfully!',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                localStorage.removeItem('selectedMovies');
+                                localStorage.removeItem('isSelectAll');
+                                window.location.reload();
+                            }
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            $('#resetFiltersBtn').click(function () {
+                window.location.href = '/Movies/Index?resetFilters=true';
             });
         });
     </script>

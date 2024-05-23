@@ -12,8 +12,17 @@ builder.Services.AddDbContext<MvcMovieContext>(options =>
 // Add services to the container.
 builder.Services.AddScoped<MovieService>();
 builder.Services.AddControllersWithViews();
-builder.Services.AddSession();
-
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); 
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.CheckConsentNeeded = context => true;
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+});
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
